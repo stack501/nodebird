@@ -5,6 +5,7 @@ const path = require('path');
 const session = require('express-session');
 const nunjucks = require('nunjucks');
 const dotenv = require('dotenv');
+const { sequelize } = require('./models');
 
 dotenv.config();
 const pageRouter = require('./routes/page');
@@ -16,6 +17,13 @@ nunjucks.configure('views', {
     express: app,
     watch: true,
 });
+sequelize.sync({ force: false })    //sync( {force: true}) 는 재시작 시 데이터베이스를 초기화하고 다시 실행 (개발시에만 사용할 것)
+        .then(() => {
+            console.log('데이터베이스 연결 성공');
+        })
+        .catch((err) => {
+            console.error(err);
+        });
 
 app.use(morgan('dev'));
 app.use(express.static(path.join(__dirname, 'public')));
