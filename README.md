@@ -570,3 +570,287 @@ exports.logout = (req, res, next) => {
 즉, 로그인 시점에 세션 안에 저장해둔 user 프로퍼티를 지워, 이후 요청에서 req.isAuthenticated() 등이 false를 반환하도록 만드는 것이 핵심이다.
 
 ### 2.6. 카카오 로그인
+![image](https://github.com/user-attachments/assets/615f6dde-4b2e-4cea-bdfd-f301d33949ff)
+#### [카카오 개발자 센터](https://developers.kakao.com/) 에서 설정
+<img width="913" alt="image" src="https://github.com/user-attachments/assets/d3cac25c-e19b-4f8c-bb89-c74e4d450534" />
+= 내 애플리케이션에서 생성 후
+<img width="856" alt="image" src="https://github.com/user-attachments/assets/5e6d630c-fcc6-4e27-8b77-07d8a14d68e0" />
+- **앱키 항목에서 REST API 키를 '.env' 파일에 넣어준다.**
+<img width="900" alt="image" src="https://github.com/user-attachments/assets/cf94e9c2-c5f1-4cdb-bc2c-a614cb8817f2" />
+- 플랫폼에 웹 사이트 도메인을 등록한다.
+<img width="726" alt="image" src="https://github.com/user-attachments/assets/7ed75336-a1f9-4a2c-90fe-977c5380d5b7" />
+- 카카오 로그인 항목에서 **카카오 로그인** 을 활성화한다.
+<img width="920" alt="image" src="https://github.com/user-attachments/assets/f28214fe-bd1a-4ba5-8302-8a6aa9c2b99d" />
+- 마찬가지로 카카오 로그인 항목에서 Redirect URI를 설정한다.
+<img width="910" alt="image" src="https://github.com/user-attachments/assets/938dfc64-b73d-4ba1-b82b-c6cb7d4fbd21" />
+- 마지막으로 동의 항목을 설정하면 완료
+
+#### 2.6.1. passport/index.js 의 kakao() 호출하여 kakaoStrategy 등록
+#### 2.6.2. kakaoStrategy 미들웨어 실행
+```js
+const passport = require("passport");
+const { Strategy: KakaoStrategy } = require('passport-kakao');
+const User = require("../models/user");
+
+module.exports = () => {
+    passport.use(new KakaoStrategy({
+        clientID: process.env.KAKAO_ID,
+        callbackURL: '/auth/kakao/callback',
+    }, async (accessToken, refreshToken, profile, done) => {
+        console.log('profile', profile);
+        try {
+            const exUser = await User.findOne({
+                where : { snsId: profile.id, provider: 'kakao' }
+            });
+            if(exUser) {
+                done(null, exUser);
+            } else {
+                //회원 가입
+                const newUser = User.create({
+                    email: profile._json?.kakao_accout?.email,
+                    nick: profile.displayName,
+                    snsId: profile.id,
+                    provider: 'kakao',
+                });
+                done(null, newUser);
+            }
+        } catch (error) {
+            console.error(error);
+            done(error);
+        }
+    }));
+};
+```
+#### 2.6.3. 사용자가 카카오 로그인 버튼 클릭
+#### 2.6.4. routes/auth.js '/kakao' 라우터 실행
+```js
+//GET /auth/kakao
+router.get('/kakao', passport.authenticate('kakao'));
+```
+해당 라우터 요청하면 passport가 카카오 로그인 페이지로 이동한다.
+
+#### 2.6.5. 카카오 로그인 페이지로 이동
+passport가 카카오 로그인 페이지로 이동한다. 이곳에서 동의하면 다음으로 이동한다.
+
+#### 2.6.6. 사용자 로그인 후 → 카카오가 **/auth/kakao/callback**으로 리다이렉트
+```js
+//GET /auth/kakao/callback
+router.get('/kakao/callback', passport.authenticate('kakao', {
+    failureRedirect: '/?loginError=카카오로그인 실패',
+}), (req, res) => {
+    res.redirect('/');
+});
+```
+카카오 로그인 페이지에서 동의하면 카카오측에서 **routes/auth.js의 /auth/kakao/callback** 으로 리다이렉트한다.
+
+#### 2.6.7. KakaoStrategy(passport.use)에서 profile 받아와 DB 검증/생성
+```js
+const passport = require("passport");
+const { Strategy: KakaoStrategy } = require('passport-kakao');
+const User = require("../models/user");
+
+module.exports = () => {
+    passport.use(new KakaoStrategy({
+        clientID: process.env.KAKAO_ID,
+        callbackURL: '/auth/kakao/callback',
+    }, async (accessToken, refreshToken, profile, done) => {
+        console.log('profile', profile);
+        try {
+            const exUser = await User.findOne({
+                where : { snsId: profile.id, provider: 'kakao' }
+            });
+            if(exUser) {
+                done(null, exUser);
+            } else {
+                //회원 가입
+                const newUser = User.create({
+                    email: profile._json?.kakao_accout?.email,
+                    nick: profile.displayName,
+                    snsId: profile.id,
+                    provider: 'kakao',
+                });
+                done(null, newUser);
+            }
+        } catch (error) {
+            console.error(error);
+            done(error);
+        }
+    }));
+};
+```
+이후 passport/kakaostrategy.js 의 '검증 콜백 함수' 부분이 실행되며 로그인을 진행하거나, 회원가입을 진행한다.
+
+#### 2.6.8. 로그인 성공 시 /로, 실패 시 failureRedirect 경로로 이동
+
+### 2.7. 게시글, 이미지 업로드하기
+#### 2.7.1. 사진 업로드 시
+<img width="507" alt="image" src="https://github.com/user-attachments/assets/f3983284-7bff-457b-b70d-d12126829d85" />
+##### 1. 사진 업로드 시 app.js 에서 post 라우터 호출
+views/main.html 의 axios.post('/post/img', formData) 를 통해 서버에 **'/post/img'** 라우터 호출한다.
+```js
+const postRouter = require('./routes/post');
+app.use('/post', postRouter);
+```
+app.js 에서는 post 라우터를 호출한다.
+
+##### 2. routes/post.js 의 '/img' 라우터를 실행한다.
+```js
+try {
+    fs.readdirSync('uploads');
+} catch(error) {
+    fs.mkdirSync('uploads');
+}
+
+const upload = multer({
+    storage: multer.diskStorage({
+        destination(req, file, cb) {
+            cb(null, 'uploads/');
+        },
+        filename (req, file, cb) {
+            const ext = path.extname(file.originalname);
+            cb(null, path.basename(file.originalname, ext) + Date.now() + ext);
+        }
+    }),
+    limits: { fileSize: 20 * 1024 * 1024 },
+});
+
+router.post('/img', isLoggedIn, upload.single('img'), afterUploadImage);
+```
+해당 라우터는 사용자가 로그인이 되어있어야하는 상태이므로 **'isLoggedIn'** 를 호출하며, multer를 통해 이미지를 서버로 업로드해야하므로 **upload.single('img')** 를 호출하며,
+**controllers/post.js** 에서 afterUploadImage 모듈을 호출한다.
+
+##### 3. controllers/post.js 의 afterUploadImage 호출
+```js
+exports.afterUploadImage = (req, res) => {
+    console.log(req.file);
+    res.json({ url: `/img/${req.file.filename}` });
+}
+```
+이미지 업로드가 끝난 직후 클라이언트(브라우저 등)에게 업로드 결과를 알려주는 역할한다.
+
+#### 2.7.2. 게시글 업로드 시
+##### 1. 게시글 업로드 시 app.js 에서 post 라우터 호출
+##### 2. routes/post.js 의 '/' 라우터를 실행한다.
+```js
+const upload2 = multer();
+router.post('/', isLoggedIn, upload2.none(), uploadPost);
+```
+라우터의 uploadPost 모듈이 실행된다.
+##### 3. controllers/post.js 의 afterUploadImage 호출
+```js
+exports.uploadPost = async (req ,res ,next) => {
+    try {
+        const post = await Post.create({
+            content: req.body.content,
+            img: req.body.url,
+            UserId: req.user.id
+        });
+        const hashtags = req.body.content.match(/#[^\s#]*/g);
+        if(hashtags) {
+            const result = await Promise.all(hashtags.map((tag) => {
+                return Hashtag.findOrCreate({
+                    where: { title: tag.slice(1).toLowerCase() }
+                });
+            }));
+            console.log('result', result);
+
+            await post.addHashtags(result.map(r => r[0]));
+        }
+        res.redirect('/');
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+}
+```
+###### 3.1. 새 게시글 생성
+```js
+const post = await Post.create({
+  content: req.body.content,
+  img: req.body.url,
+  UserId: req.user.id
+});
+```
+- Post.create 를 통해 DB의 Post 테이블에 새 레코드를 만든다.
+  + content: 게시글 내용 (ex. “오늘 날씨 #Sunny”)
+  + img: 업로드된 이미지 경로(혹은 URL)
+  + UserId: 현재 로그인한 사용자의 ID (게시글 작성자)
+- 결과로 post 라는 Sequelize 모델 인스턴스 가 반환된다.
+  + 이후 post.addHashtags(...) 같은 관계 메서드를 호출할 수 있게 된다.
+###### 3.2. 게시글 내용에서 해시태그 추출
+```js
+const hashtags = req.body.content.match(/#[^\s#]*/g);
+```
+- 정규식 /#[^\s#]*/g를 사용해, 게시글 내용에서 #으로 시작하는 문자열을 모두 찾아 배열로 반환한다.
+###### 3.3. 해시태그 DB 등록 (findOrCreate)
+```js
+if (hashtags) {
+  const result = await Promise.all(hashtags.map((tag) => {
+    return Hashtag.findOrCreate({
+      where: { title: tag.slice(1).toLowerCase() },
+    });
+  }));
+  ...
+}
+```
+- 해시태그 문자열 배열을 순회하며 Hashtag.findOrCreate 호출
+- result 는 [[HashtagInstance, created], [HashtagInstance, created], ...] 형태의 배열
+###### 3.4. 게시글 ↔ 해시태그 연결
+```js
+await post.addHashtags(result.map(r => r[0]));
+```
+- 다대다(Many-to-Many) 관계를 맺기 위해 post.addHashtags 메서드를 호출한다.
+- addHashtags는 Sequelize가 belongsToMany 설정을 통해 자동 생성하는 관계 메서드이다.
+- result.map(r => r[0]) 로 Hashtag 인스턴스만 추출한 뒤, 새로 만든 post와 연결한다.
+- 내부적으로는 중간 테이블(예: PostHashtag)에 postId, hashtagId를 저장한다.
+###### 3.5. 최종 응답
+```js
+res.redirect('/');
+```
+
+### 2.8. 팔로우 기능 만들기
+<img width="310" alt="image" src="https://github.com/user-attachments/assets/3fb15aad-319f-4bd8-badf-91b154771f28" />
+
+#### 2.8.1. 게시글의 팔로잉 버튼을 누를 시
+```js
+axios.post(`/user/${userId}/follow`)
+```
+
+#### 2.8.2. app.js의 user 라우터 호출
+#### 2.8.3. routes/user.js 에서 라우터 호출
+```js
+const { follow } = require('../controllers/user');
+router.post('/:id/follow', isLoggedIn, follow);
+```
+#### 2.8.4. controllers/user.js 에서 컨트롤러 호출
+```js
+const User = require("../models/user");
+
+exports.follow = async (req ,res ,next) => {
+    //req.user.id - 내 아이디
+    //req.params.id - 내가 팔로잉하려는 사람 아이디
+    try {
+        const user = await User.findOne({ where: { id: req.user.id } });
+        if(user){
+            await user.addFollowing(parseInt(req.params.id, 10));
+            res.send('success');
+        } else {
+            res.status(404).send('no user');
+        }
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+}
+```
+#### 2.8.5. views/main.html 에서 페이지 리다이렉션
+```js
+location.reload();
+```
+페이지 갱신.
+
+### 2.9. 해시태그 검색 기능 만들기
+<img width="351" alt="image" src="https://github.com/user-attachments/assets/b04acf95-9fde-41d4-9e7b-00ed7ddc102d" />
+
+#### 2.9.1 검색 요청
+
