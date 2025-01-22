@@ -112,12 +112,12 @@ const dotenv = require('dotenv');
 const passport = require('passport');
 const { sequelize } = require('./models');
 ```
-- Node.js가 스크립트를 시작하자마자, 필요한 라이브러리(Express, Sequelize, Passport 등)와 dotenv를 불러옵니다.
+- Node.js가 스크립트를 시작하자마자, 필요한 라이브러리(Express, Sequelize, Passport 등)와 dotenv를 불러온다.
 
 ```js
 dotenv.config();
 ```
-- .env 파일을 읽어 환경변수를 설정합니다. (process.env.* 로 접근 가능)
+- .env 파일을 읽어 환경변수를 설정한다. (process.env.* 로 접근 가능)
 
 ```js
 const pageRouter = require('./routes/page');
@@ -131,9 +131,9 @@ const passportConfig = require('./passport');
 const app = express();
 passportConfig();
 ```
-- express()를 통해 Express 애플리케이션 인스턴스(app) 를 만듭니다.
-- passportConfig()를 실행하여 Passport에 필요한 Strategy와 serializeUser, deserializeUser 등의 설정 로직을 수행합니다.
-  + 이 단계에서 “서버 실행 시점에 한 번” Passport가 내부적으로 초기화된다고 볼 수 있습니다. (주의: 아직 app.use(passport.initialize())는 아래에서 등록됩니다.)
+- express()를 통해 Express 애플리케이션 인스턴스(app) 를 만든다.
+- passportConfig()를 실행하여 Passport에 필요한 Strategy와 serializeUser, deserializeUser 등의 설정 로직을 수행한다.
+  + 이 단계에서 “서버 실행 시점에 한 번” Passport가 내부적으로 초기화된다고 볼 수 있다. (주의: 아직 app.use(passport.initialize())는 아래에서 등록된다.)
 
 #### 2.1.3. 서버 포트 및 템플릿 엔진 설정
 ```js
@@ -158,9 +158,9 @@ nunjucks.configure('views', {
   }
 })();
 ```
-- **IIFE(즉시실행함수)** 안에서 await sequelize.sync(...)를 호출합니다.
-- 여기서 테이블 생성/동기화를 진행한 뒤, DB 연결에 성공하면 콘솔에 알림을 찍습니다.
-- 이 비동기 과정이 완료되어야 모델들이 준비되어, 서버가 정상적으로 DB를 사용할 수 있게 됩니다.
+- **IIFE(즉시실행함수)** 안에서 await sequelize.sync(...)를 호출한다.
+- 여기서 테이블 생성/동기화를 진행한 뒤, DB 연결에 성공하면 콘솔에 알림을 찍는다.
+- 이 비동기 과정이 완료되어야 모델들이 준비되어, 서버가 정상적으로 DB를 사용할 수 있게 된다.
 
 #### 2.1.5. 공통 미들웨어 등록
 ```js
@@ -176,20 +176,20 @@ app.use(session({
   cookie: { httpOnly: true, secure: false },
 }));
 ```
-- **morgan(‘dev’):** 모든 요청에 대해 콘솔에 로그를 찍어 줍니다.
-- **express.static(…):** public 폴더 내부 정적 파일(이미지, CSS, JS 등)을 자동으로 서빙합니다.
-- **express.json() / express.urlencoded(…):** JSON / 폼 데이터(POST) 파싱을 도와주는 미들웨어입니다.
-- **cookieParser:** 클라이언트로부터 쿠키를 파싱합니다.
-- **session:** 세션을 활성화하여 connect.sid 쿠키를 발급합니다.
+- **morgan(‘dev’):** 모든 요청에 대해 콘솔에 로그를 찍어 준다.
+- **express.static(…):** public 폴더 내부 정적 파일(이미지, CSS, JS 등)을 자동으로 서빙한다.
+- **express.json() / express.urlencoded(…):** JSON / 폼 데이터(POST) 파싱을 도와주는 미들웨어이다.
+- **cookieParser:** 클라이언트로부터 쿠키를 파싱한다.
+- **session:** 세션을 활성화하여 connect.sid 쿠키를 발급한다.
 
 #### 2.1.6. Passport 미들웨어 등록
 ```js
 app.use(passport.initialize()); 
 app.use(passport.session());
 ```
-- **passport.initialize():** Passport 구동을 위한 기초 미들웨어. 요청 객체(req)에 login, logout, isAuthenticated 등의 메서드를 추가합니다.
-- **passport.session():** 세션 기반 인증을 도와주는 미들웨어로, 요청마다 serializeUser/deserializeUser 과정을 통해 req.user를 세팅해 줍니다.
-- 이 두 줄이 실행되어야 Passport를 통한 인증 로직이 라우터에서 제대로 동작하게 됩니다.
+- **passport.initialize():** Passport 구동을 위한 기초 미들웨어. 요청 객체(req)에 login, logout, isAuthenticated 등의 메서드를 추가한다.
+- **passport.session():** 세션 기반 인증을 도와주는 미들웨어로, 요청마다 serializeUser/deserializeUser 과정을 통해 req.user를 세팅해 준다.
+- 이 두 줄이 실행되어야 Passport를 통한 인증 로직이 라우터에서 제대로 동작하게 된다.
 
 #### 2.1.7. 라우터 등록
 ```js
@@ -197,8 +197,8 @@ app.use('/', pageRouter);
 app.use('/auth', authRouter);
 ```
 - 기본 경로 **'/'**에 대해 pageRouter 를 사용하고,
-- '/auth' 경로에는 authRouter를 사용합니다.
-- 이 시점부터 GET /, POST /auth/login, 등등 라우팅 로직이 동작합니다.
+- '/auth' 경로에는 authRouter를 사용한다.
+- 이 시점부터 GET /, POST /auth/login, 등등 라우팅 로직이 동작한다.
 
 #### 2.1.8. 404 에러 처리 미들웨어
 ```js
@@ -208,8 +208,8 @@ app.use((req, res, next) => {
   next(error);
 });
 ```
-- 여기까지 정의된 모든 라우터를 거쳤는데도 매칭되는 라우터가 없으면, 이 미들웨어가 호출됩니다.
-- next(error)로 넘어감으로써 다음 에러 처리 미들웨어로 이어집니다.
+- 여기까지 정의된 모든 라우터를 거쳤는데도 매칭되는 라우터가 없으면, 이 미들웨어가 호출된다.
+- next(error)로 넘어감으로써 다음 에러 처리 미들웨어로 이어진다.
 
 #### 2.1.9. 에러 처리 미들웨어
 ```js
@@ -220,9 +220,9 @@ app.use((err, req, res, next) => {
   res.render('error');
 });
 ```
-- 에러 핸들러로, 위에서 next(error) 가 호출되면 이 블록으로 들어옵니다.
-- res.locals에 에러 메시지, 스택 등을 담아 views/error.html 템플릿으로 렌더링합니다.
-- 개발 환경이 아니면(production), 에러 스택 정보를 숨기는 방식으로 처리할 수 있습니다.
+- 에러 핸들러로, 위에서 next(error) 가 호출되면 이 블록으로 들어온다.
+- res.locals에 에러 메시지, 스택 등을 담아 views/error.html 템플릿으로 렌더링한다.
+- 개발 환경이 아니면(production), 에러 스택 정보를 숨기는 방식으로 처리할 수 있다.
 
 #### 2.1.10. 서버 실행 (app.listen)
 ```js
@@ -230,8 +230,8 @@ app.listen(app.get('port'), () => {
   console.log(app.get('port'), '번 포트에서 실행 중');
 });
 ```
-- 위 모든 설정(미들웨어, 라우터, DB 등)이 끝난 뒤, 지정된 포트로 서버를 시작(listen)합니다.
-- 이제 클라이언트가 포트 8001(또는 지정된 포트)로 요청을 보내면, 정의된 라우터와 미들웨어가 순차적으로 처리됩니다.
+- 위 모든 설정(미들웨어, 라우터, DB 등)이 끝난 뒤, 지정된 포트로 서버를 시작(listen)한다.
+- 이제 클라이언트가 포트 8001(또는 지정된 포트)로 요청을 보내면, 정의된 라우터와 미들웨어가 순차적으로 처리된다.
 
 ### 2.2. '/' 기본경로 라우터 이동
 <img width="842" alt="image" src="https://github.com/user-attachments/assets/e9d46131-2004-4ed5-8298-d7e5a6334847" />
@@ -310,7 +310,7 @@ exports.renderJoin = (req, res, next) => {
 ```js
 app.use('/auth', authRouter);
 ```
-##### 3. routes/auth.js 내의 POST 라우터 실행
+##### 3. routes/auth.js 내의 join 라우터 실행
 ```js
 router.post('/join', isNotLoggedIn, join);
 ```
@@ -341,9 +341,232 @@ req.body 를 구조분해할당을 진행하여 nick,email,password로 받아온
 생성 후 redirect로 '/' 경로로 이동시킨다.
  
 ### 2.4. 이메일 로그인
+<img width="301" alt="image" src="https://github.com/user-attachments/assets/008c1f88-d74e-487b-8c54-a57d1361fa83" />
+
 #### 2.4.1. 첫 로그인
+##### 1. passport/index.js 실행
+```js
+const passportConfig = require('./passport');
+passportConfig();
+```
+passport의 index.js 에 접근하여 passprotConfig() 즉, 해당 모듈을 실행한다.
 
+##### 2. passport/index.js 내의 local() 실행
+```js
+const passport = require('passport');
+const local = require('./localStrategy');
+const kakao = require('./kakaoStrategy');
+const User = require('../models/user');
 
-#### 2.4.2. 로그인 이후
+module.exports = () => {
+    passport.serializeUser((user, done) => {
+        done(null, user.id);
+    });
 
-### 2.5. 카카오 로그인
+    passport.deserializeUser((id, done) => {
+        (async () => {
+            try{
+                const user = await User.findOne({where: { id }});
+                done(null, user);
+            } catch(err) {
+                done(err);
+            }
+        })();
+    });
+
+    local();
+}
+```
+local()이 실행되며 localStrategy.js 내의 모듈이 실행된다.
+
+##### 3. passport/localStrategy.js 내의 모듈 실행
+```js
+const passport = require("passport");
+const bcrypt = require('bcrypt');
+const { Strategy: LocalStorage } = require('passport-local');
+const User = require("../models/user");
+
+module.exports = () => {
+    passport.use(new LocalStorage({
+        usernameField: 'email', //req.body.email
+        passwordField: 'password',  //req.body.password
+        passReqToCallback: false,   //async (req, email, password, done) req를 넣을지말지 여부
+    }, async (email, password, done) => {
+        try {
+            const exUser = await User.findOne({ where: { email } });
+            if(exUser) {
+                const isResult = await bcrypt.compare(password, exUser.password);
+                if(isResult) {
+                    done(null, exUser);
+                } else {
+                    done(null, false, { message : '비밀번호가 일치하지 않습니다.' });
+                }
+            } else {
+                done(null, false, { message : '가입하지 않은 회원입니다.' });
+            }
+        } catch (error) {
+            console.error(error);
+            done(error);
+        }
+    }));
+};
+```
+passport.use 의 첫 번째 인자인 new LocalStorage는 서버 구동 시점에 passport.use(...)를 호출해서 LocalStrategy(‘local’이라는 이름의 전략)을 “등록”한다.
+이때 “검증 콜백 함수” 자체는 메모리에 올라가 Passport가 관리하게 되고, “즉시 실행”되지는 않는다. (두 번째 인자)
+
+##### 4. app.js 내의 passport.initialize()를 통해 실제 Express 요청 파이프라인에 Passport를 결합
+- 이걸 하지 않으면, passport.authenticate()를 호출해도 요청 데이터가 파싱되지 않거나, req 객체에 인증 관련 메서드들이 없어서 제대로 작동하지 않는다.
+  
+##### 5. 로그인 버튼 클릭 시 '/auth/login' 라우터 실행
+##### 6. app.js 의 /auth authRouter 라우터 실행
+```js
+app.use('/auth', authRouter);
+```
+##### 7. routes/auth.js 내의 login 라우터 실행
+```js
+router.post('/login', isNotLoggedIn, login);
+```
+##### 8. controllers/auth.js 내의 login 실행
+```js
+exports.login = (req, res, next) => {
+    //두 번째 인자는 'passport - localStrategy.js의 done에서 온다.
+    passport.authenticate('local', (authError, user, info) => {
+        if(authError) { //서버 실패1
+            console.error(authError);
+            return next(authError);
+        }
+
+        if(!user) { //로직 실패
+            return res.redirect(`/?loginError=${info.message}`);
+        }
+
+        return req.login(user, (loginError) => {
+            if(loginError) {
+                console.error(loginError);
+                return next(loginError);
+            }
+
+            return res.redirect('/');
+        });
+    })(req, res, next);
+}
+```
+passport.authenticate는 app.js에서 passportConfig()를 통해 localStrategy를 등록하고, passport.initialize()를 통해 사용할 수 있게 되었다.
+그리고 첫 번째 인자인 'local'을 만나게 되면 passport/localStrategy.js 의 모듈의 두 번째 인자(콜백)가 실행된다.
+
+##### 9. passport/localStrategy.js 검증 콜백 함수 실행
+```js
+module.exports = () => {
+    passport.use(new LocalStorage({
+        usernameField: 'email', //req.body.email
+        passwordField: 'password',  //req.body.password
+        passReqToCallback: false,   //async (req, email, password, done) req를 넣을지말지 여부
+    }, async (email, password, done) => {
+        try {
+            const exUser = await User.findOne({ where: { email } });
+            if(exUser) {
+                const isResult = await bcrypt.compare(password, exUser.password);
+                if(isResult) {
+                    done(null, exUser);
+                } else {
+                    done(null, false, { message : '비밀번호가 일치하지 않습니다.' });
+                }
+            } else {
+                done(null, false, { message : '가입하지 않은 회원입니다.' });
+            }
+        } catch (error) {
+            console.error(error);
+            done(error);
+        }
+    }));
+};
+```
+두 번째 인자인 async 부분이 실행되며, User DB에서 email과 일치한 유저 한명을 가져온다.
+유저가 존재하면 암화호 비교를 진행하며, 비밀번호가 일치할 경우 done(null, exUser)를 통해 다시 **'controllers/auth.js'의 모듈**로 이동한다.
+
+##### 10. controllers/auth.js 의 두 번째 미들웨어 실행
+```js
+exports.login = (req, res, next) => {
+    //두 번째 인자는 'passport - localStrategy.js의 done에서 온다.
+    passport.authenticate('local', (authError, user, info) => {
+        if(authError) { //서버 실패1
+            console.error(authError);
+            return next(authError);
+        }
+
+        if(!user) { //로직 실패
+            return res.redirect(`/?loginError=${info.message}`);
+        }
+
+        return req.login(user, (loginError) => {
+            if(loginError) {
+                console.error(loginError);
+                return next(loginError);
+            }
+
+            return res.redirect('/');
+        });
+    })(req, res, next);
+}
+```
+done(null, exUser)가 passport.authenticate()의 두 번째 인자로 받아와서 실행된다.
+최종적으로 req.login이 실행되어 로그인을 실행한다.
+
+#### 11. passport/index.js 의 serializeUser 실행
+```js
+passport.serializeUser((user, done) => {
+        done(null, user.id);
+    });
+```
+- 로그인 성공 시 (ex. LocalStrategy에서 done(null, user)를 반환한 시점) → serializeUser가 호출됨.
+- 이 때 serializeUser((user, done) => { ... }) 내부에서 done(null, user.id) 라고 호출하게 되면, 유저의 식별자(여기서는 user.id)만을 세션에 저장한다.
+  + 즉, 실제로 세션에는 user.id라는 키(또는 식별값)만 저장되며, 필요하다면 DB에서 유저 정보를 다시 찾아오는 과정을 거치게 된다(이 과정이 deserializeUser).
+
+#### 2.4.2. 로그인 이후 요청
+##### 1. 요청마다 passport/index.js 의 deserializeUser 실행
+```js
+    passport.deserializeUser((id, done) => {
+        (async () => {
+            try{
+                const user = await User.findOne({where: { id }});
+                done(null, user);
+            } catch(err) {
+                done(err);
+            }
+        })();
+    });
+```
+새 요청(Request)이 들어올 때마다, Passport는 세션에서 user.id를 읽고 deserializeUser를 호출
+-> DB에서 해당 id로 유저 정보를 조회 → req.user에 유저 정보를 담음
+
+##### 2. routes/page.js 공용 미들웨어 실행
+```js
+router.use((req, res, next) => {    //라우터에서 공통적으로 쓰는 것들
+    res.locals.user = req.user;
+    res.locals.followerCount = 0;
+    res.locals.followingCount = 0;
+    res.locals.followingIdList = [];
+    next();
+});
+```
+1번에서 req에 유저정보를 담았으므로 req.user는 이미 로그인한 사용자이다.
+
+### 2.5. 로그아웃
+<img width="298" alt="image" src="https://github.com/user-attachments/assets/86db2f46-d6d0-4c39-a1f8-adf679070fd8" />
+
+#### 2.5.1 로그아웃 버튼 클릭 시 /auth/logout 실행
+#### 2.5.2. 각종 passport 세팅 후 routes/auth.js 의 logout 라우터 실행
+```js
+router.get('/logout', isLoggedIn, logout);
+```
+#### 2.5.3. controllers/auth.js 의 logout 컨트롤러 실행
+```js
+exports.logout = (req, res, next) => {
+    req.logout(() => {
+        res.redirect('/');
+    });
+```
+세션에서 사용자 정보(req.user) 만 제거(혹은 무효화)된다.
+즉, 로그인 시점에 세션 안에 저장해둔 user 프로퍼티를 지워, 이후 요청에서 req.isAuthenticated() 등이 false를 반환하도록 만드는 것이 핵심이다.
+
+### 2.6. 카카오 로그인
