@@ -5,9 +5,9 @@ const { isLoggedIn, isNotLoggedIn } = require('../middlewares/index');
 
 router.use((req, res, next) => {    //라우터에서 공통적으로 쓰는 것들
     res.locals.user = req.user;
-    res.locals.followerCount = 0;
-    res.locals.followingCount = 0;
-    res.locals.followingIdList = [];
+    res.locals.followerCount = req.user?.Followers?.length || 0;
+    res.locals.followingCount = req.user?.Followings?.length || 0;
+    res.locals.followingIdList = req.user?.Followings?.map(f => f.id) || [];
     next();
 });
 
