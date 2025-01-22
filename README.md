@@ -852,5 +852,52 @@ location.reload();
 ### 2.9. 해시태그 검색 기능 만들기
 <img width="351" alt="image" src="https://github.com/user-attachments/assets/b04acf95-9fde-41d4-9e7b-00ed7ddc102d" />
 
-#### 2.9.1 검색 요청
+#### 2.9.1. 검색 요청
+```js
+<form id="hashtag-form" action="/hashtag">
+```
+사용자가 검색창에 원하는 해쉬태그를 입력 후 **'검색'** 버튼을 누를 시, **views/main.html 의 /hashtag** 서버에서 호출된다.
 
+#### 2.9.2. app.js 의 page 라우터 호출
+```js
+app.use('/', pageRouter);
+```
+
+#### 2.9.3. routes/page.js 내의 renderHashtag 호출
+```js
+const { renderProfile, renderJoin, renderMain, renderHashtag } = require('../controllers/page');
+router.get('/hashtag', renderHashtag);  //hashtag?hashtag=고양이
+```
+해당 라우터가 호출되면 **controllers/page.js 의 renderHashtag** 가 호출된다.
+
+#### 2.9.4. controllers/page.js 의 renderHashtag 컨트롤러 호출
+```js
+exports.renderHashtag = async (req, res, next) => {
+    const query = req.query.hashtag;
+    if(!query) {
+        return res.redirect('/');
+    }
+
+    try {
+        const hashtag = await Hashtag.findOne({ where: { title: query } });
+        let posts = [];
+        if (hashtag) {
+            posts = await hashtag.getPosts({
+                include: [{
+                    model: User,
+                    attributes: ['id', 'nick'],
+                }],
+                order: [['createdAt', 'DESC']],
+            });
+        }
+        res.render('main', {
+            title: `${query} | NodeBird`,
+            twits: posts,
+        });
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+}
+```
+Hashtag 테이블에서 query와 title이 같은 해쉬태크를 가져와서 **'views/main.html'** 에서 보여준다.
