@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-const { renderProfile, renderJoin, renderMain } = require('../controllers/page');
+const { renderProfile, renderJoin, renderMain, renderHashtag } = require('../controllers/page');
 const { isLoggedIn, isNotLoggedIn } = require('../middlewares/index');
 
 router.use((req, res, next) => {    //라우터에서 공통적으로 쓰는 것들
@@ -14,5 +14,6 @@ router.use((req, res, next) => {    //라우터에서 공통적으로 쓰는 것
 router.get('/profile', isLoggedIn, renderProfile);  // renderProfile 같은 것들은 컨트롤러라 불림
 router.get('/join', isNotLoggedIn, renderJoin);
 router.get('/', renderMain);
+router.get('/hashtag', renderHashtag);  //hashtag?hashtag=고양이
 
 module.exports = router;
