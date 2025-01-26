@@ -685,6 +685,7 @@ module.exports = () => {
 ### 2.7. 게시글, 이미지 업로드하기
 #### 2.7.1. 사진 업로드 시
 <img width="507" alt="image" src="https://github.com/user-attachments/assets/f3983284-7bff-457b-b70d-d12126829d85" />
+
 ##### 1. 사진 업로드 시 app.js 에서 post 라우터 호출
 views/main.html 의 axios.post('/post/img', formData) 를 통해 서버에 **'/post/img'** 라우터 호출한다.
 ```js
