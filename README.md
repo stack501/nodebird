@@ -901,3 +901,218 @@ exports.renderHashtag = async (req, res, next) => {
 }
 ```
 Hashtag 테이블에서 query와 title이 같은 해쉬태크를 가져와서 **'views/main.html'** 에서 보여준다.
+
+-----------------
+
+## 3. 테스트 해보기 (단위, 통합, 부하)
+### 3.1. jest 설치
+```js
+npm i -D jest
+```
+### 3.2. package.json 수정
+```js
+"scripts": {
+    "start": "nodemon app",
+    "test": "jest"
+  }
+```
+test 부분을 **jest**로 수정
+
+### 3.3. 미들웨어 테스트용 js 추가
+middlewares/index.test.js 추가
+- 테스트할 파일명은 test를 붙이면 된다.
+
+### 3.4. middlewares/index.js 의 isLoggedIn, isNotLoggedIn 테스트해보기
+#### 3.4.1. isLoggedIn 테스트 코드 작성하기
+```js
+exports.isLoggedIn = (req, res, next) => {
+    if(req.isAuthenticated()) { //패스포트 통해서 로그인 진행 확인
+        next();
+    } else {
+        res.status(403).send('로그인 필요');
+    }
+};
+```
+if문을 기점으로 테스트 코드를 작성하며, 테스트 코드들은 '모킹'으로 구현한다.
+
+##### 1. 로그인되어 있으면 isLoggedIn이 next를 호출해야 하는 경우
+```js
+test('로그인되어 있으면 isLoggedIn이 next를 호출해야 함.', () => {
+        const req = {
+            isAuthenticated: jest.fn(() => true),
+        }
+
+        const res = {
+                status: jest.fn(() => res),
+                send: jest.fn(),
+            }
+
+        const next = jest.fn();
+        
+        isLoggedIn(req ,res ,next);
+        expect(next).toBeCalledTimes(1);
+    });
+```
+jest.fn() 으로 일회성 테스트 함수를 만들 수 있다.
+
+##### 2. 로그인되어 있지 않으면 isLoggedIn이 에러를 응답해야 하는 경우
+```js
+test('로그인되어 있지 않으면 isLoggedIn이 에러를 응답해야 함.', () => {
+        const req = {
+            isAuthenticated: jest.fn(() => false),
+        }
+
+        const res = {
+          status: jest.fn(() => res),
+          send: jest.fn(),
+        }
+
+        const next = jest.fn();
+  
+        isLoggedIn(req ,res ,next);
+        expect(res.status).toBeCalledWith(403);
+        expect(res.send).toBeCalledWith('로그인 필요');
+    });
+```
+toBeCalledTimes는 횟수, toBeCalledWith는 아규먼트를 넣을 수 있다.
+
+###### 3. describe 으로 그룹화하고 정리하기
+```js
+describe('isLoggedIn', () => {
+    const res = {
+        status: jest.fn(() => res),
+        send: jest.fn(),
+    }
+    const next = jest.fn();
+
+    test('로그인되어 있으면 isLoggedIn이 next를 호출해야 함.', () => {
+        const req = {
+            isAuthenticated: jest.fn(() => true),
+        }
+        
+        isLoggedIn(req ,res ,next);
+        expect(next).toBeCalledTimes(1);
+    });
+    
+    test('로그인되어 있지 않으면 isLoggedIn이 에러를 응답해야 함.', () => {
+        const req = {
+            isAuthenticated: jest.fn(() => false),
+        }
+  
+        isLoggedIn(req ,res ,next);
+        expect(res.status).toBeCalledWith(403);
+        expect(res.send).toBeCalledWith('로그인 필요');
+    });
+});
+```
+describe로 같은 계열의 테스트 코드를 그룹화할 수 있으며, 공통적인 부분을 test 앞으로 뺄 수 있다.
+
+### 3.5. services 코드로 분리 및 테스트
+#### 1. 기존 컨트롤러 코드
+```js
+const User = require('../models/user');
+
+exports.follow = async (req, res, next) => {
+  try {
+    const user = await User.findOne({ where: { id: req.user.id } });
+    if (user) {
+      await user.addFollowing(parseInt(req.params.id, 10));
+      res.send('success');
+    } else {
+      res.status(404).send('no user');
+    }
+  } catch (error) {
+    console.error(error);
+    next(error);
+  }
+};
+```
+
+#### 2. services로 코드 분리
+```js
+const { follow } = require('../services/user');
+
+exports.follow = async (req ,res ,next) => {
+    //req.user.id - 내 아이디
+    //req.params.id - 내가 팔로잉하려는 사람 아이디
+    try {
+        const result = await follow(req.user.id, req.params.id);
+        
+        if(result === 'ok'){
+            res.send('success');
+        } else if(result === 'no user') {
+            res.status(404).send('no user');
+        }
+    } catch (error) {
+        console.error(error);
+        next(error);
+    }
+}
+```
+controllers/user.js
+
+```js
+const User = require("../models/user");
+
+exports.follow = async (userId, followingId) => {
+    const user = await User.findOne({ where: { id: userId } });
+
+    if(user){
+        await user.addFollowing(parseInt(followingId, 10));
+        return 'ok';
+    } else {
+        return 'no user';
+    }
+}
+```
+services/user.js
+
+#### 3. services에 테스트 코드 구현
+```js
+jest.mock('../models/user');
+const User = require("../models/user");
+const { follow } = require('./user');
+
+describe('follow', () => {
+    test('사용자를 찾아 팔로잉을 추가하고 success를 응답해야 함', async () => {
+        User.findOne.mockReturnValue({
+            addFollowing(id) {
+                return Promise.resolve(true);
+            },
+        });
+        const result = await follow(1, 2);  // userId=1, followingId=2
+        expect(result).toBe('ok');
+    });
+
+    test('사용자를 못찾으면 res.status(404).send(no user)를 호출함', async () => {
+        User.findOne.mockReturnValue(null);
+        const result = await follow(1, 2);
+        expect(result).toBe('no user');
+    });
+
+    test('DB에서 에러가 발생하면 next(error) 호출', async () => {
+        const message = 'DB 에러';
+        User.findOne.mockReturnValue(Promise.reject(message));
+        
+        try {
+            await follow(1, 2);
+        } catch (err) {
+            expect(err).toBe(message);
+        }
+    });
+});
+```
+req, res, next를 없애고 직접적인 모킹 값을 넣을 수 있다.
+
+### 3.6. 테스트 커버리지
+<img width="556" alt="image" src="https://github.com/user-attachments/assets/577e70a5-a691-4520-8e0a-36333bce90bd" />
+jest가 테스트한 것 중에서 부족한 부분을 커버리지로 만들어 보여준다.
+
+```js
+"scripts": {
+    "start": "nodemon app",
+    "test": "jest",
+    "coverage": "jest --coverage"
+  },
+```
+기본적으로 jest에서 제공하며, scripts에 coverage를 추가한 뒤, **'npm run coverage'** 명령어로 실행할 수 있다.
