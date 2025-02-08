@@ -4,7 +4,7 @@
   "description": "SNS 프로젝트",
   "main": "server.js",
   "scripts": {
-    "start": "NODE_ENV=production PORT=8080 pm2 start server.js -i -1",
+    "start": "NODE_ENV=production PORT=80 pm2 start server.js -i -1",
     "dev": "nodemon server",
     "test": "jest",
     "coverage": "jest --coverage"
