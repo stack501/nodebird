@@ -2,7 +2,7 @@ const Sequelize = require('sequelize');
 const { loadModels } = require('../lib/sequelize-loader');
 
 const env = process.env.NODE_ENV || 'development';
-const config = require('../config/config.json')[env];
+const config = require('../config/config')[env];
 const sequelize = new Sequelize(
     config.database,
     config.username,
