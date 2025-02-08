@@ -10,7 +10,7 @@ const { sequelize } = require('./models');
 const helmet = require('helmet');
 const hpp = require('hpp');
 const redis = require('redis');
-const RedisStore = require('connect-redis').default(session);
+const { RedisStore } = require('connect-redis');
 
 dotenv.config();
 const redisClient = redis.createClient({
