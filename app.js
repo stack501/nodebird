@@ -14,11 +14,16 @@ const { RedisStore } = require('connect-redis');
 
 dotenv.config();
 const redisClient = redis.createClient({
-    url: `redis://${process.env.REDIS_HOST}`,
-    password: process.env.REDIS_PASSWORD,
-    legacyMode: true,
+    url: `redis://${process.env.REDIS_USERNAME}:${process.env.REDIS_PASSWORD}@${process.env.REDIS_HOST}:${process.env.REDIS_PORT}/0`,
+    legacyMode: false,
 });
-redisClient.connect().catch(console.error);
+redisClient.on('connect', () => {
+    console.info('Redis connected!');
+ });
+ redisClient.on('error', (err) => {
+    console.error('Redis Client Error', err);
+ });
+ redisClient.connect().then();
 
 const pageRouter = require('./routes/page');
 const authRouter = require('./routes/auth');
@@ -28,7 +33,6 @@ const passportConfig = require('./passport');
 
 const app = express();
 passportConfig();
-app.set('port', process.env.PORT || 80);
 app.set('view engine', 'html');
 nunjucks.configure('views', {
     express: app,
@@ -45,6 +49,7 @@ nunjucks.configure('views', {
 })();
 
 if (process.env.NODE_ENV == 'production') {
+    app.set('port', process.env.PORT || 80);
     app.enable('trust proxy');
     app.use(morgan('combined'));
     app.use(helmet({
@@ -54,6 +59,7 @@ if (process.env.NODE_ENV == 'production') {
     }));
     app.use(hpp());
 } else {
+    app.set('port', process.env.PORT || 8080);
     app.use(morgan('dev'));
 }
 
@@ -70,7 +76,10 @@ const sessionOption = {
         httpOnly: true,
         secure: false,
     },
-    store: new RedisStore({ client: redisClient }),
+    store: new RedisStore({ 
+        client: redisClient, 
+        prefix: 'session:',
+      }),
 };
 if (process.env.NODE_ENV === 'production') {
     sessionOption.proxy = true;
